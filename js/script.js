@@ -260,7 +260,7 @@ contactForm.addEventListener('submit', async (e) => {
     
     try {
         // You'll need to change the URL to your deployed backend URL later
-        const response = await fetch('http://localhost:5000/contact', {
+        const response = await fetch('https://portfolio-lv9d.onrender.com/contact', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
