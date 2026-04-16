@@ -2,7 +2,7 @@
  * script.js - Main logic for Portfolio
  */
 
-// 1. Loader Animation
+// 1. Loader Animation (Optimized to max 300ms)
 window.addEventListener('load', () => {
     const loader = document.getElementById('loader');
     setTimeout(() => {
@@ -11,26 +11,28 @@ window.addEventListener('load', () => {
             loader.style.display = 'none';
             document.body.classList.remove('loading');
             
-            // Initialize AOS after loader is gone to prevent issues
-            AOS.init({
-                once: true,
-                offset: 50,
-                duration: 800,
-                easing: 'ease-in-out-cubic',
-            });
-        }, 500);
-    }, 1000); // minimum 1s loader to show animation
+            // Initialize AOS
+            if (typeof AOS !== 'undefined') {
+                AOS.init({
+                    once: true,
+                    offset: 50,
+                    duration: 800,
+                    easing: 'ease-in-out-cubic',
+                });
+            }
+        }, 300);
+    }, 100); 
 });
 
 // 2. Set active year in footer
-document.getElementById('year').textContent = new Date().getFullYear();
+const yearEl = document.getElementById('year');
+if (yearEl) yearEl.textContent = new Date().getFullYear();
 
 // 3. Dark/Light Mode Logic
-const htmlRoot = document.getElementById('html-root');
+const htmlRoot = document.documentElement; // Tailwind dark mode operates on html element
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 const themeToggleBtnMobile = document.getElementById('themeToggleBtnMobile');
 
-// Check local storage or system preference
 const userTheme = localStorage.getItem('theme');
 const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -46,251 +48,230 @@ function toggleTheme() {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
 }
 
-themeToggleBtn.addEventListener('click', toggleTheme);
-themeToggleBtnMobile.addEventListener('click', toggleTheme);
+if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+if (themeToggleBtnMobile) themeToggleBtnMobile.addEventListener('click', toggleTheme);
 
 // 4. Mobile Menu Toggle
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const mobileMenu = document.getElementById('mobileMenu');
 const mobileLinks = document.querySelectorAll('.mobile-link');
 
-mobileMenuBtn.addEventListener('click', () => {
-    mobileMenu.classList.toggle('hidden');
-    const icon = mobileMenuBtn.querySelector('i');
-    if(mobileMenu.classList.contains('hidden')) {
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
-    } else {
-        icon.classList.remove('fa-bars');
-        icon.classList.add('fa-times');
-    }
-});
-
-mobileLinks.forEach(link => {
-    link.addEventListener('click', () => {
-        mobileMenu.classList.add('hidden');
+if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
         const icon = mobileMenuBtn.querySelector('i');
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
+        if(mobileMenu.classList.contains('hidden')) {
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+        } else {
+            icon.classList.remove('fa-bars');
+            icon.classList.add('fa-times');
+        }
     });
-});
 
-// 5. Typing Animation
-const typingTextElement = document.getElementById('typing-text');
-const texts = ["Web Developer", "AI Enthusiast", "Building Smart Applications"];
-let textIndex = 0;
-let charIndex = 0;
-let isDeleting = false;
-
-function typeEffect() {
-    const currentText = texts[textIndex];
-    if (isDeleting) {
-        typingTextElement.textContent = currentText.substring(0, charIndex - 1);
-        charIndex--;
-    } else {
-        typingTextElement.textContent = currentText.substring(0, charIndex + 1);
-        charIndex++;
-    }
-
-    let typeSpeed = isDeleting ? 50 : 100;
-
-    if (!isDeleting && charIndex === currentText.length) {
-        typeSpeed = 2000; // Pause at end of text
-        isDeleting = true;
-    } else if (isDeleting && charIndex === 0) {
-        isDeleting = false;
-        textIndex = (textIndex + 1) % texts.length;
-        typeSpeed = 500; // Pause before new text
-    }
-
-    setTimeout(typeEffect, typeSpeed);
+    mobileLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            const icon = mobileMenuBtn.querySelector('i');
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+        });
+    });
 }
-// Start typing effect
-setTimeout(typeEffect, 1500);
 
-
-// 6. Skills Data
-const skills = [
-    { name: 'HTML5', color: 'bg-orange-500', text: 'text-white' },
-    { name: 'CSS3', color: 'bg-blue-500', text: 'text-white' },
-    { name: 'JavaScript', color: 'bg-yellow-400', text: 'text-gray-900' },
-    { name: 'React', color: 'bg-cyan-500', text: 'text-white' },
-    { name: 'Tailwind CSS', color: 'bg-teal-400', text: 'text-white' },
-    { name: 'Bootstrap', color: 'bg-purple-600', text: 'text-white' },
-    { name: 'Node.js', color: 'bg-green-600', text: 'text-white' },
-    { name: 'Express', color: 'bg-gray-800', text: 'text-white' },
-    { name: 'MongoDB', color: 'bg-green-500', text: 'text-white' },
-    { name: 'Python', color: 'bg-blue-600', text: 'text-white' },
+// 5. Skills Data & Injection
+const categorizedSkills = [
+    {
+        category: 'Frontend Development',
+        icon: 'fa-layer-group',
+        skills: ['React', 'JavaScript', 'Tailwind CSS', 'Bootstrap', 'HTML5', 'CSS3']
+    },
+    {
+        category: 'Backend Development',
+        icon: 'fa-server',
+        skills: ['Node.js', 'Express', 'MongoDB', 'Python']
+    },
+    {
+        category: 'Tools & Workflows',
+        icon: 'fa-toolbox',
+        skills: ['Git', 'GitHub', 'Vercel', 'Render', 'VS Code', 'Figma']
+    }
 ];
 
 const skillsContainer = document.getElementById('skills-container');
-skills.forEach((skill, index) => {
-    const delay = index * 50;
-    const span = document.createElement('span');
-    span.className = `${skill.color} ${skill.text} px-5 py-2.5 rounded-full font-medium shadow-md transition transform hover:-translate-y-1 hover:shadow-lg`;
-    span.setAttribute('data-aos', 'zoom-in');
-    span.setAttribute('data-aos-delay', delay);
-    span.textContent = skill.name;
-    skillsContainer.appendChild(span);
-});
+if (skillsContainer) {
+    categorizedSkills.forEach((cat, index) => {
+        const delay = index * 100;
+        
+        // Create skill tags HTML
+        const skillTagsHTML = cat.skills.map(skill => 
+            `<span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium rounded-lg border border-indigo-100 dark:border-indigo-800/50">${skill}</span>`
+        ).join('');
+
+        const card = document.createElement('div');
+        card.className = "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-8 rounded-2xl shadow-sm hover:shadow-md transition-shadow";
+        card.setAttribute('data-aos', 'fade-up');
+        card.setAttribute('data-aos-delay', delay);
+        
+        card.innerHTML = `
+            <div class="w-12 h-12 bg-indigo-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-xl mb-6 shadow-sm">
+                <i class="fas ${cat.icon}"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">${cat.category}</h3>
+            <div class="flex flex-wrap gap-2">
+                ${skillTagsHTML}
+            </div>
+        `;
+        
+        skillsContainer.appendChild(card);
+    });
+}
 
 
-// 7. Project Modal Logic
-const projectsData = {
-    'project1': {
+// 6. Case Study Projects Data & Injection
+const projectsData = [
+    {
+        id: 'girvi',
         title: 'Girvi App',
-        desc: 'A modern fintech platform for managing pawned assets (Girvi system) with secure authentication, real-time tracking, and digital record management for users and shop owners.',
+        type: 'Fintech Platform',
+        problem: 'Local pawn shop owners manage complex asset-backed loans (Girvi) strictly on paper, leading to calculation errors, lost tracking, and a lack of transparency for the loan bearers.',
+        solution: 'Developed a robust digital ledger system to manage pawned assets. It enforces secure authentication, computes real-time interest trajectories, and maintains a transparent digital record for both shop owners and borrowers.',
         img: 'images/project1.png',
-        tech: [
-            { name: 'Node.js', class: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-            { name: 'MongoDB', class: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-            { name: 'React', class: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }
-        ],
+        tech: ['React', 'Node.js', 'MongoDB', 'Express', 'Tailwind CSS'],
         live: 'https://girvi-app-9a2y.vercel.app/',
         repo: 'https://github.com/anujsingh1802/girviApp'
     },
-    'project2': {
-        title: 'Tire Management',
-        desc: 'A smart management system for tracking tire inventory, maintenance schedules, and usage history with real-time updates and analytics for efficient fleet and shop operations.',
+    {
+        id: 'tire',
+        title: 'Tire Management System',
+        type: 'Inventory Dashboard',
+        problem: 'Fleet managers struggle to accurately track tire lifespan, maintenance schedules, and inventory usage across multiple vehicles, causing inefficient operational spending and potential safety risks.',
+        solution: 'Engineered a smart inventory dashboard capturing real-time updates and historical analytics. It provides predictive maintenance alerts and simplifies inventory management for shop operations.',
         img: 'images/project2.png',
-        tech: [
-            { name: 'JavaScript', class: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
-            { name: 'React', class: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-            { name: 'Node.js', class: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' }
-        ],
+        tech: ['React', 'Node.js', 'JavaScript', 'Tailwind CSS'],
         live: 'https://tier-management-iota.vercel.app/',
         repo: 'https://github.com/anujsingh1802/Tier_management'
     },
-    'project3': {
-        title: 'Weather App',
-        desc: 'A multi-feature web app that provides real-time weather updates along with train services like live train status, PNR tracking, and station details in a clean and user-friendly interface.',
+    {
+        id: 'weather',
+        title: 'Multi-Utility Platform',
+        type: 'Weather & Railway Services',
+        problem: 'Users frequently have to switch between clunky interfaces to check weather conditions and live train tracking systems during travel.',
+        solution: 'Built a consolidated web application providing real-time weather updates integrated with Indian Railway API services. It allows users to track PNR status, live trains, and station details all via a single clean interface.',
         img: 'images/project3.png',
-        tech: [
-            { name: 'Tailwind CSS', class: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300' },
-            { name: 'React', class: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-            { name: 'Railway API', class: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' }
-        ],
+        tech: ['React', 'Tailwind CSS', 'Railway APIs', 'Weather APIs'],
         live: 'https://weather-blond-kappa.vercel.app/',
         repo: 'https://github.com/anujsingh1802/weather-pwa'
     }
-};
+];
 
-const modal = document.getElementById('projectModal');
-const modalContent = document.getElementById('modalContent');
+const projectsContainer = document.getElementById('projects-container');
+if (projectsContainer) {
+    projectsData.forEach((project, index) => {
+        // Alternate flex direction for case study layout on desktop
+        const isEven = index % 2 === 0;
+        const flexDirection = isEven ? 'lg:flex-row' : 'lg:flex-row-reverse';
+        const fadeDirection = isEven ? 'fade-right' : 'fade-left';
+        
+        const techTags = project.tech.map(t => `<span class="text-xs font-semibold px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">${t}</span>`).join('');
 
-function openModal(projectId) {
-    const data = projectsData[projectId];
-    if(!data) return;
+        const projectHTML = `
+            <div class="flex flex-col ${flexDirection} gap-10 lg:gap-16 items-center">
+                <!-- Project Image -->
+                <div class="w-full lg:w-1/2" data-aos="${fadeDirection}">
+                    <div class="relative group rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+                        <div class="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none"></div>
+                        <img src="${project.img}" alt="${project.title}" class="w-full h-auto object-cover transform group-hover:scale-[1.02] transition-transform duration-500" onerror="this.src='https://placehold.co/800x600/1e293b/FFFFFF?text=${encodeURIComponent(project.title)}'"/>
+                    </div>
+                </div>
+                
+                <!-- Project Details -->
+                <div class="w-full lg:w-1/2 space-y-6" data-aos="fade-up">
+                    <div>
+                        <p class="text-indigo-600 dark:text-indigo-400 font-bold tracking-wide uppercase text-sm mb-2">${project.type}</p>
+                        <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-tight">${project.title}</h3>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-slate-900 dark:text-white font-semibold mb-1">The Problem</h4>
+                            <p class="text-slate-600 dark:text-slate-400 font-light leading-relaxed">${project.problem}</p>
+                        </div>
+                        <div>
+                            <h4 class="text-slate-900 dark:text-white font-semibold mb-1">The Solution</h4>
+                            <p class="text-slate-600 dark:text-slate-400 font-light leading-relaxed">${project.solution}</p>
+                        </div>
+                    </div>
 
-    // Populate Data
-    document.getElementById('modalTitle').textContent = data.title;
-    document.getElementById('modalDesc').textContent = data.desc;
-    const modalImg = document.getElementById('modalImg');
-    modalImg.src = data.img;
-    modalImg.onerror = function() {
-        this.onerror = null;
-        this.src = `https://placehold.co/600x400/2a2a2a/FFFFFF?text=${encodeURIComponent(data.title)}`;
-    };
-    document.getElementById('modalLive').href = data.live;
-    document.getElementById('modalRepo').href = data.repo;
+                    <div class="flex flex-wrap gap-2 pt-2">
+                        ${techTags}
+                    </div>
 
-    const techContainer = document.getElementById('modalTech');
-    techContainer.innerHTML = '';
-    data.tech.forEach(t => {
-        const span = document.createElement('span');
-        span.className = `text-xs px-3 py-1 rounded-md ${t.class} font-medium`;
-        span.textContent = t.name;
-        techContainer.appendChild(span);
+                    <div class="flex flex-wrap gap-4 pt-4 border-t border-slate-200 dark:border-slate-800 mt-6 md:mt-8">
+                        <a href="${project.live}" target="_blank" class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow-sm hover:shadow hover-lift flex items-center">
+                            <i class="fas fa-external-link-alt mr-2"></i> Live Demo
+                        </a>
+                        <a href="${project.repo}" target="_blank" class="px-6 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm hover-lift flex items-center">
+                            <i class="fab fa-github mr-2"></i> View Code
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        projectsContainer.insertAdjacentHTML('beforeend', projectHTML);
     });
-
-    // Show Modal
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    
-    // Animate in
-    setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        modal.classList.add('opacity-100');
-        modalContent.classList.remove('scale-95');
-        modalContent.classList.add('scale-100');
-    }, 10);
-    
-    // Prevent background scrolling
-    document.body.style.overflow = 'hidden';
 }
 
-function closeModal() {
-    // Animate out
-    modal.classList.remove('opacity-100');
-    modal.classList.add('opacity-0');
-    modalContent.classList.remove('scale-100');
-    modalContent.classList.add('scale-95');
-    
-    setTimeout(() => {
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-        document.body.style.overflow = '';
-    }, 300);
-}
 
-// Close modal on click outside
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-        closeModal();
-    }
-});
-
-
-// 8. Contact Form Submit Logic
+// 7. Contact Form Submit Logic
 const contactForm = document.getElementById('contactForm');
 const formStatus = document.getElementById('formStatus');
 const submitBtn = document.getElementById('submitBtn');
 
-contactForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-    const message = document.getElementById('message').value;
-
-    // Loading state
-    const originalBtnContent = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Sending...';
-    submitBtn.disabled = true;
-    
-    try {
-        // You'll need to change the URL to your deployed backend URL later
-        const response = await fetch('https://portfolio-lv9d.onrender.com/contact', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name, email, message })
-        });
-
-        const result = await response.json();
-
-        if(response.ok) {
-            formStatus.textContent = 'Message sent successfully! 🎉';
-            formStatus.className = 'mt-4 p-3 rounded text-center text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 block';
-            contactForm.reset();
-        } else {
-            throw new Error(result.error || 'Something went wrong.');
-        }
-
-    } catch (error) {
-        console.error('Error submitting form:', error);
-        formStatus.textContent = error.message || 'Failed to connect to the server.';
-        formStatus.className = 'mt-4 p-3 rounded text-center text-sm font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 block';
-    } finally {
-        // Reset button
-        submitBtn.innerHTML = originalBtnContent;
-        submitBtn.disabled = false;
+if (contactForm) {
+    contactForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        // Hide status after 5 seconds
-        setTimeout(() => {
-            formStatus.classList.remove('block');
-            formStatus.classList.add('hidden');
-        }, 5000);
-    }
-});
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const message = document.getElementById('message').value;
+
+        const originalBtnContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Sending...';
+        submitBtn.disabled = true;
+        
+        try {
+            const response = await fetch('https://portfolio-lv9d.onrender.com/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, email, message })
+            });
+
+            const result = await response.json();
+
+            if(response.ok) {
+                formStatus.textContent = 'Message sent successfully! 🎉';
+                formStatus.className = 'mt-4 p-4 rounded-xl text-center text-sm font-medium bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/50 block';
+                contactForm.reset();
+            } else {
+                throw new Error(result.error || 'Something went wrong.');
+            }
+
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            formStatus.textContent = error.message || 'Failed to connect to the server.';
+            formStatus.className = 'mt-4 p-4 rounded-xl text-center text-sm font-medium bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50 block';
+        } finally {
+            submitBtn.innerHTML = originalBtnContent;
+            submitBtn.disabled = false;
+            
+            setTimeout(() => {
+                formStatus.classList.remove('block');
+                formStatus.classList.add('hidden');
+            }, 5000);
+        }
+    });
+}
